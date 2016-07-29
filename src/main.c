@@ -1,11 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "inc/hw_types.h"
+#include "inc/hw_ints.h"
 #include "inc/hw_memmap.h"
+#include "inc/hw_types.h"
 #include "driverlib/gpio.h"
 #include "driverlib/uart.h"
 #include "driverlib/interrupt.h"
 #include "drivers/rit128x96x4.h"
+
+#include "thread_manager.h"
+#include "threads.h"
 
 void uart_init(void) {
   // set GPIO A0 and A1 as UART pins.
@@ -44,8 +48,25 @@ int main(void) {
   uart_init();
   led_init();
 
+  // prepare thread table
+  iprintf("1\r\n");
+  init_thread_table();
+  iprintf("2\r\n");
+  init_thread(threadUART);
+  iprintf("3\r\n");
+
+  // init systick
+
+  // register SVC handler
+  IntRegister(FAULT_SVCALL, schedule);
+
   // Enable global Interrupts
   IntMasterEnable();
+  iprintf("4\r\n");
+
+  yield();
+  iprintf("5\r\n");
+
 
   // Commands for user control mode printed to terminal using iprintf()
   iprintf("Hello world\r\n");
@@ -54,10 +75,9 @@ int main(void) {
     switch ((c = getchar())) {
       case EOF:
         clearerr(stdin);
-      case 255:
         break;
 
-      default:
+      case 32:
         light ^= 1;
         iprintf("A key was pressed: %d\r\n", light);
         GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_0, light);

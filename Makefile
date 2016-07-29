@@ -9,7 +9,7 @@ endif
 BIN := potatOS
 
 CCFLAGS := -Wall -Os -march=armv7-m -mcpu=cortex-m3 -mthumb -mfix-cortex-m3-ldrd -Wl,--gc-sections -I${STELLARIS} -I$(STELLARIS)/boards/ek-lm3s6965
-LDFLAGS := -L${STELLARIS}/driverlib/gcc-cm3 -ldriver-cm3 -Tlinkscript.x -Wl,--entry,ResetISR -Wl,--gc-sections
+LDFLAGS := -L${STELLARIS}/driverlib/gcc-cm3 -ldriver-cm3 -Tlinkscript.x -Wl,--entry,ResetISR -Wl,--gc-sections -g
 
 SRCDIR := src
 BLDDIR := build
