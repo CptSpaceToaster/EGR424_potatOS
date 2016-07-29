@@ -4,8 +4,9 @@
 #include "inc/hw_memmap.h"
 #include "inc/hw_types.h"
 #include "driverlib/gpio.h"
-#include "driverlib/uart.h"
 #include "driverlib/interrupt.h"
+#include "driverlib/uart.h"
+#include "driverlib/systick.h"
 #include "drivers/rit128x96x4.h"
 
 #include "thread_manager.h"
@@ -24,6 +25,15 @@ void uart_init(void) {
   );
 }
 
+void systick_init(void) {
+    // 1 ms period
+    SysTickPeriodSet(8000);
+    SysTickIntEnable();
+    SysTickIntRegister(schedule);
+    SysTickEnable();
+}
+
+
 void led_init(void) {
   GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_0);
 }
@@ -37,7 +47,6 @@ int main(void) {
 
   // initialize the OLED display and display "IR Sensor Demo" on the OLED screen.
   RIT128x96x4Init(1000000);
-  RIT128x96x4StringDraw("potatOS", 38,  0, 15);
 
   // enable peripherals
   SysCtlPeripheralEnable(SYSCTL_PERIPH_UART0);
@@ -49,41 +58,22 @@ int main(void) {
   led_init();
 
   // prepare thread table
-  iprintf("1\r\n");
   init_thread_table();
-  iprintf("2\r\n");
   init_thread(threadUART);
-  iprintf("3\r\n");
+  init_thread(threadOLED);
+  init_thread(threadLED);
 
   // init systick
+  systick_init();
 
   // register SVC handler
   IntRegister(FAULT_SVCALL, schedule);
 
-  // Enable global Interrupts
+  // enable global Interrupts
   IntMasterEnable();
-  iprintf("4\r\n");
 
+  // kick off this wild ride
   yield();
-  iprintf("5\r\n");
-
-
-  // Commands for user control mode printed to terminal using iprintf()
-  iprintf("Hello world\r\n");
-
-  while(1) {
-    switch ((c = getchar())) {
-      case EOF:
-        clearerr(stdin);
-        break;
-
-      case 32:
-        light ^= 1;
-        iprintf("A key was pressed: %d\r\n", light);
-        GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_0, light);
-        break;
-    }
-  }
 
   exit(0);
 }

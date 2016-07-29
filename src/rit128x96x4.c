@@ -435,8 +435,8 @@ RIT128x96x4Clear(void)
     //
     // Clear out the buffer used for sending bytes to the display.
     //
-    *(unsigned char *)&g_pucBuffer[0] = 0;
-    *(unsigned char *)&g_pucBuffer[4] = 0;
+    *(unsigned long *)&g_pucBuffer[0] = 0;
+    *(unsigned long *)&g_pucBuffer[4] = 0;
 
     //
     // Set the window to fill the entire display.

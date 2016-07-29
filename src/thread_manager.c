@@ -8,7 +8,7 @@ typedef struct thread {
   struct thread *next;
   void (*callback)(void);
   char *stack;
-  unsigned reg[40];
+  unsigned reg[10];
 } thread_t;
 
 typedef struct thread_table {
@@ -29,7 +29,6 @@ volatile int flag = 0;
  * Private function to run and clean up a thread
  */
 void thread_runner(void) {
-  iprintf("  HALLELUJAH!\r\n");
   // call the current thread's entry point
   (*(table.current->callback))();
   // clean up a thread after it exits
@@ -96,15 +95,13 @@ void remove_current_thread(void) {
  * Rotate to the next thread, and clean up dead ones.
  */
 void schedule(void) {
-  iprintf(" A\r\n");
   // perform janitorial duties
   if (delete) {
-    free((thread_t *)delete->stack);
-    free((thread_t *)delete);
     if (delete == table.current) {
       while(1);
       // this should return to main somehow?
     }
+    flag = 0;
     delete = NULL;
   }
 
@@ -118,13 +115,9 @@ void schedule(void) {
   }
   flag = 1;
 
-  iprintf(" B\r\n");
-
   //rotate schedule
   table.previous = table.current;
   table.current = table.current->next;
-
-  iprintf(" C\r\n");
 
   //restore stack
   asm volatile (
