@@ -20,22 +20,29 @@ void uart_init(void) {
   );
 }
 
+void led_init(void) {
+  GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_0);
+}
+
 int main(void) {
   int c;
+  int light=0;
   // set the clocking to run directly from the crystal.
   SysCtlClockSet(SYSCTL_SYSDIV_1 | SYSCTL_USE_OSC | SYSCTL_OSC_MAIN |
                  SYSCTL_XTAL_8MHZ);
 
   // initialize the OLED display and display "IR Sensor Demo" on the OLED screen.
   RIT128x96x4Init(1000000);
-  RIT128x96x4StringDraw("potatOS", 20,  0, 15);
+  RIT128x96x4StringDraw("potatOS", 38,  0, 15);
 
   // enable peripherals
   SysCtlPeripheralEnable(SYSCTL_PERIPH_UART0);
   SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
+  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
 
   // initialize peripherals.
   uart_init();
+  led_init();
 
   // Enable global Interrupts
   IntMasterEnable();
@@ -47,10 +54,13 @@ int main(void) {
     switch ((c = getchar())) {
       case EOF:
         clearerr(stdin);
+      case 255:
         break;
 
-      case 'D':
-        iprintf("D was pressed\r\n");
+      default:
+        light ^= 1;
+        iprintf("A key was pressed: %d\r\n", light);
+        GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_0, light);
         break;
     }
   }
