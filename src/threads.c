@@ -29,5 +29,6 @@ void threadLED(void) {
     light ^= 1;
     GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_0, light);
     for(i=0; i<200000; i++);
+    yield();
   }
 }
