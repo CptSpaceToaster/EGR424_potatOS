@@ -2,6 +2,12 @@
 #include <stdlib.h>
 #include "thread_manager.h"
 
+// for context switching
+#include "inc/hw_types.h"
+#include "inc/hw_gpio.h"
+#include "inc/hw_memmap.h"
+#include "driverlib/gpio.h"
+
 #define STACK_SIZE 4096
 
 typedef struct thread {
@@ -95,6 +101,8 @@ void remove_current_thread(void) {
  * Rotate to the next thread, and clean up dead ones.
  */
 void schedule(void) {
+  // turn on context switch signal
+  HWREG(GPIO_PORTF_BASE + (GPIO_O_DATA + (GPIO_PIN_2 << 2))) = 0x4;
   // perform janitorial duties
   if (delete) {
     if (delete == table.current) {
@@ -126,8 +134,14 @@ void schedule(void) {
 
     "movw   lr, 0xFFFD\n"
     "movt   lr, 0xFFFF\n" // return with unprivileged access
-    "bx lr"
     : : "r" (table.current->reg)
+  );
+
+  // turn off context switch signal
+  HWREG(GPIO_PORTF_BASE + (GPIO_O_DATA + (GPIO_PIN_2 << 2))) = 0;
+
+  asm volatile (
+    "bx lr"
   );
 }
 

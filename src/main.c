@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "inc/hw_ints.h"
+#include "inc/hw_gpio.h"
 #include "inc/hw_memmap.h"
 #include "inc/hw_types.h"
 #include "driverlib/gpio.h"
@@ -38,9 +39,11 @@ void led_init(void) {
   GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_0);
 }
 
+void context_switch_measure_init(void) {
+  GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_2);
+}
+
 int main(void) {
-  int c;
-  int light=0;
   // set the clocking to run directly from the crystal.
   SysCtlClockSet(SYSCTL_SYSDIV_1 | SYSCTL_USE_OSC | SYSCTL_OSC_MAIN |
                  SYSCTL_XTAL_8MHZ);
@@ -56,6 +59,10 @@ int main(void) {
   // initialize peripherals.
   uart_init();
   led_init();
+  context_switch_measure_init();
+
+  // print a welcome message
+  iprintf("\r\n\n\n\n\n\n\nHarvesting potatOS\r\n\n");
 
   // prepare thread table
   init_thread_table();
@@ -68,6 +75,9 @@ int main(void) {
 
   // register SVC handler
   IntRegister(FAULT_SVCALL, schedule);
+
+  // set the measure signal low to start
+  GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_2, 0);
 
   // enable global Interrupts
   IntMasterEnable();
